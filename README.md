@@ -8,46 +8,39 @@ Topics: `airflow`, `etl`, `data-engineering`, `fastapi`, `postgresql`, `minio`, 
 
 ## Results
 
-All data is small and generated for this repo. Nothing here ran against real fleets.
+All data is small and generated for this repo. Per-row detail, caveats and benchmark setup: [docs/DETAILS.md](docs/DETAILS.md).
 
 | What | Result | Command |
 |---|---|---|
-| Telemetry pipeline, 74 sample rows | 74 loaded, 1 row flagged as outlier, 4 to 6 s | `make demo` |
-| DTC events pipeline, 24 sample rows | 21 loaded (3 duplicate deliveries dropped), 4 to 6 s | `make demo` |
-| Fleet vehicles pipeline, 10 sample rows | 10 loaded, 4 to 6 s | `make demo` |
-| Validate 100,000 generated telemetry rows | 0.27 s (about 370,000 rows/s) | `make eval` |
-| Transform 100,000 rows | 0.31 s (about 330,000 rows/s) | `make eval` |
+| Three sample pipelines (74, 24 and 10 rows) | 74, 21 (3 duplicate deliveries dropped) and 10 loaded, 1 row flagged as outlier, 4 to 6 s each | `make demo` |
+| Validate and transform 100,000 generated telemetry rows | 0.27 s (about 370,000 rows/s) and 0.31 s (about 330,000 rows/s) | `make eval` |
 | Upsert 100,000 rows into PostgreSQL | 7.1 s (about 14,000 rows/s) | `make bench-load` |
 | Peak memory of the benchmark process | 310 MB | `make bench-load` |
 | Unit and API tests | 52 pass | `make test` |
-
-The benchmark numbers come from one run on a 16 GB Apple silicon laptop with other containers running, so they move by about 2x between runs. The latest run is saved in `results/benchmark.json`. The Airflow run times in the first three rows moved between 4 and 6 s across runs and include task scheduling overhead, not just the work.
-
-In `pipeline_runs`, `records_rejected` counts rows that failed a quality check, summed over checks. Those rows are still loaded, flagged with `is_outlier`, so a single bad row can count twice (the telemetry sample shows 2 for 1 flagged row).
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    CSV[Sample CSVs] --> MinIO[(MinIO<br/>etl-raw-data)]
-    MinIO --> AF[Airflow DAGs<br/>extract, validate, transform, load]
-    AF --> PG[(PostgreSQL<br/>raw_*, fact_*, dim_vehicles,<br/>pipeline_runs, data_quality_logs)]
-    PG --> API[FastAPI<br/>/pipelines]
+    CSV[Sample CSVs] --> MinIO[(MinIO)]
+    MinIO --> AF[Airflow DAGs]
+    AF --> PG[(PostgreSQL)]
+    PG --> API[FastAPI /pipelines]
 ```
 
 - Each DAG finds the newest file under its MinIO prefix, validates it, transforms it with pandas, and upserts it.
-- Validation writes one row per check to `data_quality_logs`. A missing required column fails the run. Range and format failures are logged and the rows are flagged.
+- Validation writes one row per check to `data_quality_logs`. A missing required column fails the run.
 - Raw rows land in `raw_*` tables, cleaned rows in `fact_telemetry`, `fact_dtc_events` and `dim_vehicles`.
-- Every run writes a `pipeline_runs` row. The FastAPI service reads it, so you can check status without database access.
+- Every run writes a `pipeline_runs` row that the API reads, so you can check status without database access.
 - Tasks retry 3 times with a 5 minute delay and call a failure callback that logs a structured alert.
 
 ## Design choices
 
-- **Flag outliers, do not drop them.** A speed of 9999 mph is a sensor fault, but the row is still evidence. It loads with `is_outlier = TRUE`.
-- **Hand-written pandas checks, not Great Expectations.** For single files of tens of thousands of rows they run in well under a second and the failure messages are easy to read. A schema library would make sense once checks multiply.
-- **Upserts keyed on a business id** (`record_id`, `event_id`, `vin`). Re-running a file is safe for the curated tables. The raw tables are append only, so a re-run adds raw rows tagged with the new run id.
-- **A plain retry loop for MinIO downloads** instead of a retry library. It is three lines and easy to step through.
-- **MinIO and PostgreSQL stand in for S3 and Redshift.** The code only changes connection settings. I have not deployed it to AWS, so I call it deployable by configuration, not deployed.
+- **Flag outliers, do not drop them.** A bad sensor reading is still evidence, so it loads with `is_outlier = TRUE`.
+- **Hand-written pandas checks, not Great Expectations.** They run in well under a second and the failure messages are easy to read.
+- **Upserts keyed on a business id.** Re-running a file is safe for the curated tables.
+- **A plain retry loop for MinIO downloads.** It is three lines and easy to step through.
+- **MinIO and PostgreSQL stand in for S3 and Redshift.** Not deployed to AWS; deployable by configuration only.
 
 ## Run it
 
