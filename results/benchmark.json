@@ -1,0 +1,14 @@
+{
+  "rows": 100000,
+  "python": "3.13.12",
+  "machine": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "validate_seconds": 0.213,
+  "transform_seconds": 0.238,
+  "rows_after_transform": 100000,
+  "load_seconds": 6.571,
+  "rows_loaded": 100000,
+  "validate_rows_per_second": 468823,
+  "transform_rows_per_second": 420435,
+  "load_rows_per_second": 15218,
+  "peak_rss_mb": 274.8
+}
