@@ -12,16 +12,16 @@ All data is small and generated for this repo. Nothing here ran against real fle
 
 | What | Result | Command |
 |---|---|---|
-| Telemetry pipeline, 74 sample rows | 74 loaded, 1 row flagged as outlier, 5 s | `make demo` |
-| DTC events pipeline, 24 sample rows | 21 loaded (3 duplicate deliveries dropped), 4 s | `make demo` |
-| Fleet vehicles pipeline, 10 sample rows | 10 loaded, 4 s | `make demo` |
-| Validate 100,000 generated telemetry rows | 0.20 s (about 490,000 rows/s) | `make eval` |
-| Transform 100,000 rows | 0.24 s (about 420,000 rows/s) | `make eval` |
-| Upsert 100,000 rows into PostgreSQL | 6.6 s (about 15,000 rows/s) | `make bench-load` |
-| Peak memory of the benchmark process | 275 MB | `make bench-load` |
+| Telemetry pipeline, 74 sample rows | 74 loaded, 1 row flagged as outlier, 4 to 6 s | `make demo` |
+| DTC events pipeline, 24 sample rows | 21 loaded (3 duplicate deliveries dropped), 4 to 6 s | `make demo` |
+| Fleet vehicles pipeline, 10 sample rows | 10 loaded, 4 to 6 s | `make demo` |
+| Validate 100,000 generated telemetry rows | 0.27 s (about 370,000 rows/s) | `make eval` |
+| Transform 100,000 rows | 0.31 s (about 330,000 rows/s) | `make eval` |
+| Upsert 100,000 rows into PostgreSQL | 7.1 s (about 14,000 rows/s) | `make bench-load` |
+| Peak memory of the benchmark process | 310 MB | `make bench-load` |
 | Unit and API tests | 52 pass | `make test` |
 
-The benchmark numbers come from one run on a 16 GB Apple silicon laptop with other containers running, so they move by about 2x between runs. The latest run is saved in `results/benchmark.json`. The Airflow run times in the first three rows include task scheduling overhead, not just the work.
+The benchmark numbers come from one run on a 16 GB Apple silicon laptop with other containers running, so they move by about 2x between runs. The latest run is saved in `results/benchmark.json`. The Airflow run times in the first three rows moved between 4 and 6 s across runs and include task scheduling overhead, not just the work.
 
 In `pipeline_runs`, `records_rejected` counts rows that failed a quality check, summed over checks. Those rows are still loaded, flagged with `is_outlier`, so a single bad row can count twice (the telemetry sample shows 2 for 1 flagged row).
 
@@ -93,7 +93,3 @@ Use Python 3.12 or 3.13 for the tests and install: Python 3.14 fails on the psyc
 - Count distinct rejected rows instead of summing failures per check.
 - Wire the Slack and email alert helpers, which are commented out in `etl/monitoring/alerts.py`.
 - Add an integration test that runs a DAG against real PostgreSQL and MinIO in CI.
-
-## More
-
-Repo description: Airflow, MinIO, PostgreSQL and FastAPI ETL for vehicle telematics sample data, run locally with Docker Compose.

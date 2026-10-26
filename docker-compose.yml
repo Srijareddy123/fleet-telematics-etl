@@ -100,7 +100,7 @@ services:
         mc alias set local http://minio:9000 minioadmin minioadmin123 &&
         mc mb --ignore-existing local/etl-raw-data &&
         mc mb --ignore-existing local/etl-processed &&
-        mc mb --ignore-existing local/etl-archive &&
+        mc mb --ignore-existing local/etl-landing &&
         mc cp /sample_data/vehicle_telemetry_raw.csv local/etl-raw-data/telemetry/ &&
         mc cp /sample_data/dtc_events_raw.csv local/etl-raw-data/dtc/ &&
         mc cp /sample_data/fleet_vehicles_raw.csv local/etl-raw-data/vehicles/ &&

@@ -71,7 +71,7 @@ def log_data_quality_alert(pipeline_name: str, check_name: str, details: str,
     )
 
 
-# ── Private helpers (commented out until production credentials are available) ─
+# ── Private helpers (commented out until a Slack webhook and SMTP server are set up) ─
 
 # def _send_slack_alert(dag_id, task_id, execution_date, error_msg):
 #     import urllib.request, json

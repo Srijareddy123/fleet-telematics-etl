@@ -2,13 +2,13 @@
   "rows": 100000,
   "python": "3.13.12",
   "machine": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
-  "validate_seconds": 0.213,
-  "transform_seconds": 0.238,
+  "validate_seconds": 0.273,
+  "transform_seconds": 0.306,
   "rows_after_transform": 100000,
-  "load_seconds": 6.571,
+  "load_seconds": 7.118,
   "rows_loaded": 100000,
-  "validate_rows_per_second": 468823,
-  "transform_rows_per_second": 420435,
-  "load_rows_per_second": 15218,
-  "peak_rss_mb": 274.8
+  "validate_rows_per_second": 366402,
+  "transform_rows_per_second": 326787,
+  "load_rows_per_second": 14050,
+  "peak_rss_mb": 309.8
 }
